@@ -1,0 +1,13 @@
+.player {
+	height: 200px;
+	width: 200px;
+	float: left;
+	background-color: #ddd;
+	margin: 2%;
+	padding: 2%;
+	text-align: center;
+}
+
+.clear {
+	clear:both;
+}
