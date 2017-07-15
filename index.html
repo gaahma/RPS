@@ -7,24 +7,51 @@
 	<script type="text/javascript" src="assets/javascript/rps3.js"></script>
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
 	<link rel="stylesheet" type="text/css" href="assets/css/style.css">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
-	<form id="add-player">
-		Name <input type="text" id="player-name"><button id="submit-name">Submit</button>
-	</form>
-	<div class="player" id="player1"></div>
-	<div class="player" id="player2"></div>
-	<h1 class="clear rps" data-value="r">Rock</h1>
-	<h1 class="rps" data-value="p">Paper</h1>
-	<h1 class="rps" data-value="s">Scissors</h1>
-	<textarea rows="10" cols="50"></textarea><br>
-	<form>
-		<input type="text" id="chat-input">
-		<input type="submit" id="chat-submit">
-	</form>
-
-	<script>
-		//rps.init();
-	</script>
+	<div class="container text-center">
+		<div class="row">
+			<div class="col-xs-12 text-center">
+				<form id="add-player">
+					Name <input type="text" id="player-name">
+					<button id="submit-name" class="btn btn-primary">Submit</button>
+				</form>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-xs-4">
+				<div class="player" id="player1"></div>
+			</div>
+			<div class="col-xs-4">
+				<div class="player" id="mediator"></div>
+			</div>
+			<div class="col-xs-4">
+				<div class="player" id="player2"></div>
+			</div>
+		</div>
+		<div class="row button-row">
+			<div class="col-xs-4">
+				<button class="rps btn btn-primary" data-value="r">Rock</button>
+			</div>
+			<div class="col-xs-4">
+				<button class="rps btn btn-primary" data-value="p">Paper</button>
+			</div>
+			<div class="col-xs-4">
+				<button class="rps btn btn-primary" data-value="s">Scissors</button>
+			</div>
+		</div>
+		<div class="row">	
+			<div class="col-xs-12">
+				<form class="chat-form">
+					<textarea readonly id="chat"></textarea>
+					<input type="text" id="chat-input">
+					<input type="submit" id="chat-submit" class="btn btn-primary">
+				</form>
+			</div>
+		</div>	
+		
+		
+	</div>
 </body>
 </html>

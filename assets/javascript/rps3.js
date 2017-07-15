@@ -1,7 +1,12 @@
 var id;
+var myName;
+
 var opponent;
 var opponentName;
-var madeChoice = false;
+
+var isPlayer = false;
+
+var chatStarted = false;
 var config = {
     apiKey: "AIzaSyBJumpdG1HIciEg8KA-JLd8CKwj_6Y_pMc",
     authDomain: "rps-online-76238.firebaseapp.com",
@@ -12,58 +17,119 @@ var config = {
 };
 firebase.initializeApp(config);
 database = firebase.database();
-//var ref = database.ref("/players");
 
 
 database.ref("/players").on("value", function(snapshot){
     var player1 = snapshot.child("1").exists();
     var player2 = snapshot.child("2").exists();
     if(player1 && player2){
+        if(opponentName === undefined){
+            opponentName = getName(opponent);
+        }
         var myChoice = playerChoice(id);
         var oppChoice = playerChoice(opponent);
         if(myChoice && oppChoice){
+            $("#player" + id).html("<h3>" + humanize(myChoice) + "</h3");
+            $("#player" + opponent).html("<h3>" + humanize(oppChoice) + "</h3");
             var winner = playRPS(myChoice, oppChoice);
             if(winner === 1){  //1 if I win
-                updateScore(id, 1);
+                if(id === 1){   //only player1 updates the win/loss info
+                    setTimeout(function(){
+                        updateScore(id, 1);
+                        updateScore(opponent,0);
+                    }, 1500);
+                }
+                $("#mediator").html("You won!");
             } 
             else if(winner === 2){ //2 if my opponent wins
-                updateScore(id, 0);
-            } else {
-                addChoice(id, null);  //0 (else) if a tie
+                if (id === 1){  //only player 1 updates the win/loss info.  
+                    setTimeout(function(){
+                        updateScore(id, 0);
+                        updateScore(opponent,1);
+                    }, 1500);
+                }
+                $("#mediator").html("You lost!");
+            } else {                //0 (else) if a tie
+                $("#mediator").html("Tie!");
+                if(id === 1){
+                    setTimeout(function(){
+                        addChoice(id, null); 
+                        addChoice(opponent, null);
+                    }, 1500);
+                }
             }
-            displayPlayer(id);
-            displayPlayer(opponent);
         } 
         else if (myChoice){
-
+            $("#mediator").html("Waiting for opponent to pick");
         } 
         else if (oppChoice){
-
+            $("#mediator").html("Waiting for you to pick");
         } else {
-            displayPlayer(id);
-            displayPlayer(opponent);
-            console.log("waiting for both to players to choose");
+            displayPlayer(1);
+            displayPlayer(2);
+            $('#mediator').html("Waiting for both players to choose");
         }
     }
     else if(player1){
-        console.log("waiting for player2");
         $("#player2").html("Waiting for player");
+        $("#mediator").empty();
+        if(opponentName !== undefined){
+            $("#chat").append(opponentName + " has disconnected\n");
+            opponentName = undefined;
+        }
         displayPlayer(1);
+        opponent = 2;
         addChoice(1, null);
     } 
     else if(player2){
-        console.log("waiting for player1");
         $("#player1").html("Waiting for player");
+        $("#mediator").empty();
+        if(opponentName !== undefined){
+            $("#chat").append(opponentName + " has disconnected\n");
+            opponentName = undefined;
+        }
         displayPlayer(2);
+        opponent = 1;
         addChoice(2, null);
     } else {
-       $("#player1").html("Waiting for player");
-       $("#player2").html("Waiting for player"); 
+        $("#mediator").html("Type your name to join");
+        $("#player1").html("Waiting for player");
+        $("#player2").html("Waiting for player"); 
     }
 });
 
+chatReset();
 
+function humanize(choice){
+    if (choice === "r")
+        return "Rock";
+    if (choice === "p")
+        return "Paper";
+    if (choice === "s")
+        return "Scissors";
+}
 
+function chatReset(){
+    database.ref().once("value", function(snapshot){
+        if(snapshot.child("chat").exists){
+            if(id === undefined && opponent === undefined){
+                database.ref("/chat").remove();
+                $("#chat").empty();
+            }
+            else if(isPlayer === false){
+                $("#chat").empty();
+            }         
+        }
+    }, function(errorObj){
+        console.log(errorObj.code);
+    });
+
+    database.ref("/chat").on("child_added", function(snapshot){
+        $("#chat").append(snapshot.val().message + "\n");
+    }, function(errorObj){
+        console.log(errorObj.code);
+    });
+}
 
 function updateScore(id, winLoss){  //
     var wins;
@@ -90,6 +156,7 @@ function updateScore(id, winLoss){  //
     }
 
 }
+
 function playerChoice(id){
     var choice = false;
         database.ref("/players/" + id).once("value", function(snapshot){
@@ -99,6 +166,16 @@ function playerChoice(id){
         console.log("Error occured: " + errorObj.code);
     });
     return choice;
+}
+
+function getName(id){
+    var name;
+    database.ref("/players/" + id).once("value", function(snapshot){
+        name = snapshot.val().name;
+    }, function(errorObj){
+        console.log(errorObj.code);
+    });
+    return name;
 }
 
 function addChoice(id, choice){
@@ -172,29 +249,41 @@ $(document).ready(function(){
     $("#submit-name").on("click", function(){
         event.preventDefault();
         if(!playerExists(1)){
-            var name = $("#player-name").val().trim();
+            myName = $("#player-name").val().trim();
             id = 1;
             opponent = 2;
-            newPlayer(name, id);
+            newPlayer(myName, id);
+            $("#add-player").hide();
             database.ref("/players/1").onDisconnect().remove();
+            isPlayer = true;
         } else if (!playerExists(2)){
-            var name = $("#player-name").val().trim();
+            myName = $("#player-name").val().trim();
             id = 2;
             opponent = 1;
-            newPlayer(name, id);
+            newPlayer(myName, id);
+            $("#add-player").hide();
+            isPlayer = true;
             database.ref("/players/2").onDisconnect().remove();
         }
+        $("#player-name").val("");
     });
 
     $(".rps").on("click", function(){
-        if(id !== undefined && madeChoice === false)
-            addChoice(id, $(this).attr("data-value"));
-        //console.log("reached");
+        if(isPlayer === false)
+            return;
+        addChoice(id, $(this).attr("data-value"));     
+        
     });
 
     $("#chat-submit").on("click", function(){
         event.preventDefault();
-
-    })
+        if(id === undefined)
+            return;
+        var message = $("#chat-input").val().trim();
+        database.ref("/chat").push({
+            message: myName + ": " + message,
+        });
+        $("#chat-input").val("");
+    });
 });
 
